@@ -60,8 +60,8 @@ out.df = data.frame(ent = epdEnts$E,
                     ndate = rep(NA, nbent))
 
 ## Start at 1507 --- the first new entity
-for (i in 1508:nbent) {
-  print(paste("Doing",i,"of",nbent,"-",epdEnts$Sigle[i]))
+for (i in 1508:nEnts) {
+  print(paste("Doing",i,"of",nEnts,"-",epdEnts$Sigle[i]))
   
   chrID = which(epdChrons$E == epdEnts$E[i] & epdChrons$Default == "Y")
   
@@ -110,5 +110,6 @@ for (i in 1508:nbent) {
     sitebasis = epdAgebasis %>% filter(E == epdEnts$E[i])
     write.table(sitebasis, infoFile, append=TRUE)
     
+  }
+  
 }
-
