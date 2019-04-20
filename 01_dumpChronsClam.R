@@ -110,17 +110,5 @@ for (i in 1508:nbent) {
     sitebasis = epdAgebasis %>% filter(E == epdEnts$E[i])
     write.table(sitebasis, infoFile, append=TRUE)
     
-    ## Run clam
-    if (nages >= 2) {
-      clam(coreName, depths.file=TRUE, coredir = "./agemodels/clam/Cores/")
-      
-      if (nages >= 4 & epdEnts$E[i]!=2145) {
-        clam(coreName, depths.file=TRUE, type = 4, coredir = "./agemodels/clam/Cores/")
-        
-      }
-    }
-  }
-  stop()
-  
 }
 

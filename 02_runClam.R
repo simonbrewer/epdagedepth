@@ -1,6 +1,6 @@
-source("./clam.R")
+library(clam)
 
-coreDir = "~/Dropbox/Data/epd/mapping/maps2010/clamOut/Cores/"
+coreDir = "./agemodels/clam/Cores/"
 
 coreList = list.files(coreDir)
 
@@ -11,25 +11,15 @@ for (i in 1:ncore) {
   ageFile = paste0(coreDir,coreList[i],"/",coreList[i],".csv")
   ages = read.csv(ageFile)
   
-  depFile = paste0(coreDir,coreList[i],"/",coreList[i],"_depth.csv")
-  depths = read.csv(depFile)
-  
-  clamFile = data.frame(ID = ages$ID,
-                        C14_age = ages$C14_age,
-                        cal_BP = ages$cal_BP,
-                        error=ages$error, 
-                        resevoir = NA,
-                        depth=ages$depth)
-  
-  subDir <- paste0("./Cores/",coreList[i])
-  if (!file.exists(subDir)){
-    dir.create(file.path("./", subDir))
+  ## Run clam
+  if (nages >= 2) {
+    clam(coreName, depths.file=TRUE, coredir = "./agemodels/clam/Cores/")
+    
+    if (nages >= 4 & epdEnts$E[i]!=2145) {
+      clam(coreName, depths.file=TRUE, type = 4, coredir = "./agemodels/clam/Cores/")
+      
+    }
   }
-  
-  write.csv(clamFile, paste0("./Cores/",coreList[i],"/",coreList[i],".csv"),
-            row.names=FALSE)
-  
-  clam(coreList[i], storedat = TRUE)
   stop()
   
 }
