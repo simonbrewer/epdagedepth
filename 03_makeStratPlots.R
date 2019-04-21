@@ -46,9 +46,15 @@ epdAgebasis = read.delim(paste0(dbstring,"agebasis.dump"), sep="\t", header = FA
 colnames(epdAgebasis) <- c("E","Chron","Sample","DepthCM","Thickness",
                            "AgeBP","AgeUp","AgeLo","RCode")
 
+log_con <- file("stratplot.log", open = "w")
+cat("EPD Stratiplots\n", file = log_con)
+cat(paste0(date(),"\n"), file = "test.log", append = TRUE)
+
 ## Start at 1507 --- the first new entity
 for (i in 1508:nEnts) {
-  print(paste("Doing",i,"of",nEnts,"-",epdEnts$Sigle[i]))
+  cat(paste("Doing",i,"of",nEnts,"-",epdEnts$Sigle[i],"\n"), 
+      file = "test.log", append = TRUE)
+  
   coreName = paste0(i,"_",epdEnts$Sigle[i])
   ageFile = paste0("agemodels/clam/Cores/",coreName,"/",coreName,"_interpolated_ages.txt")
   
@@ -58,51 +64,70 @@ for (i in 1508:nEnts) {
     
     ## Get counts
     counts = epdPCounts %>% 
-      filter(Ent == ents$ent[i]) %>%
-      dcast(Sample ~ PVar, value.var = "Count", fill = 0)
+      filter(Ent == ents$ent[i]) 
     
-    ## Get groups for sums
-    ppvars = as.numeric(names(counts)[-1])
-    sumvar = rep(0, ncol(counts)-1)
-    pnames = rep(NA, ncol(counts)-1)
-    for (j in 1:length(sumvar)) {
-      vargrp = epdPGroup$Group[epdPGroup$PVar == ppvars[j]]
+    if (nrow(counts) > 0) {
       
-      if (vargrp %in% c("TRSH","HERB","DWAR")) {
-        sumvar[j] = 1
+      counts = counts %>% 
+        dcast(Sample ~ PVar, value.var = "Count", fill = 0)
+      
+      ## Get groups for sums
+      ppvars = as.numeric(names(counts)[-1])
+      sumvar = rep(0, ncol(counts)-1)
+      pnames = rep(NA, ncol(counts)-1)
+      for (j in 1:length(sumvar)) {
+        vargrp = epdPGroup$Group[epdPGroup$PVar == ppvars[j]]
+        
+        if (vargrp %in% c("TRSH","HERB","DWAR")) {
+          sumvar[j] = 1
+        }
+        pnames[j] = as.character(epdPVars$VarName[epdPVars$Var == ppvars[j]])
       }
-      pnames[j] = as.character(epdPVars$VarName[epdPVars$Var == ppvars[j]])
+      
+      counts = counts[,-1]
+      sums = apply(t(t(counts) * sumvar),1,sum)
+      sums = ifelse(sums == 0, 1, sums) ## In case of zero sums
+      percs = counts / sums
+      nTaxa = ncol(percs)
+      
+      if (nrow(counts) == nrow(ages)) {
+        
+        pdf(paste0("./stratplot/",coreName,".pdf"), width=12, height=7)
+        # strat.plot(percs, yvar = ages$best, y.rev = TRUE,
+        #            title = paste(ents$ent[i], ents$sigle[i]))
+        keepID = which(apply(percs,2,max) > 0.05)
+        strat.plot(percs[,keepID], yvar = ages$depth, y.rev = TRUE,
+                   x.names = pnames, title = paste(ents$ent[i], ents$sigle[i], "Depth"),
+                   ylabel = "Depth")
+        strat.plot(percs[,keepID], yvar = ages$best, y.rev = TRUE,
+                   x.names = pnames, title = paste(ents$ent[i], ents$sigle[i], "Time"),
+                   ylabel = "AgeBP")
+        # npages = ceiling(nTaxa/nTaxaPage)
+        # for (j in 1:npages) {
+        #   tStart = (j-1) * nTaxaPage + 1
+        #   tEnd = j * nTaxaPage
+        #   if (j == npages & tEnd > nTaxa) {
+        #     tEnd = nTaxa
+        #   }
+        #   if (tStart == tEnd) { tStart = tStart - 1 } ## Avoid having only one taxa one page
+        #   strat.plot(percs[,tStart:tEnd], yvar = ages$best, y.rev = TRUE)
+        #   
+        # }
+        dev.off()
+        
+      } else {
+        print(paste("Mismatch of samples:", epdEnts$E[i]))
+        cat(paste("Mismatch of samples:", epdEnts$E[i],"\n"), 
+            file = "test.log", append = TRUE)
+      }
+      
+      
+    } else {
+      print(paste("Missing counts:", epdEnts$E[i]))
+      cat(paste("Missing counts:", epdEnts$E[i],"\n"), 
+          file = "test.log", append = TRUE)
     }
-    
-    counts = counts[,-1]
-    sums = apply(t(t(counts) * sumvar),1,sum)
-    percs = counts / sums
-    nTaxa = ncol(percs)
-    
-    pdf(paste0("./stratplot/",coreName,".pdf"), width=12, height=7)
-    # strat.plot(percs, yvar = ages$best, y.rev = TRUE,
-    #            title = paste(ents$ent[i], ents$sigle[i]))
-    keepID = which(apply(percs,2,max) > 0.01)
-    strat.plot(percs[,keepID], yvar = ages$depth, y.rev = TRUE,
-               x.names = pnames, title = paste(ents$ent[i], ents$sigle[i], "Depth"),
-               ylabel = "Depth")
-    strat.plot(percs[,keepID], yvar = ages$best, y.rev = TRUE,
-               x.names = pnames, title = paste(ents$ent[i], ents$sigle[i], "Time"),
-               ylabel = "AgeBP")
-    # npages = ceiling(nTaxa/nTaxaPage)
-    # for (j in 1:npages) {
-    #   tStart = (j-1) * nTaxaPage + 1
-    #   tEnd = j * nTaxaPage
-    #   if (j == npages & tEnd > nTaxa) {
-    #     tEnd = nTaxa
-    #   }
-    #   if (tStart == tEnd) { tStart = tStart - 1 } ## Avoid having only one taxa one page
-    #   strat.plot(percs[,tStart:tEnd], yvar = ages$best, y.rev = TRUE)
-    #   
-    # }
-    dev.off()
     
   }
   
 }
-  
