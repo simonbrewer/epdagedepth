@@ -48,12 +48,12 @@ colnames(epdAgebasis) <- c("E","Chron","Sample","DepthCM","Thickness",
 
 log_con <- file("stratplot.log", open = "w")
 cat("EPD Stratiplots\n", file = log_con)
-cat(paste0(date(),"\n"), file = "test.log", append = TRUE)
+cat(paste0(date(),"\n"), file = "stratplot.log", append = TRUE)
 
 ## Start at 1507 --- the first new entity
 for (i in 1508:nEnts) {
   cat(paste("Doing",i,"of",nEnts,"-",epdEnts$Sigle[i],"\n"), 
-      file = "test.log", append = TRUE)
+      file = "stratplot.log", append = TRUE)
   
   coreName = paste0(i,"_",epdEnts$Sigle[i])
   ageFile = paste0("agemodels/clam/Cores/",coreName,"/",coreName,"_interpolated_ages.txt")
@@ -118,16 +118,18 @@ for (i in 1508:nEnts) {
       } else {
         print(paste("Mismatch of samples:", epdEnts$E[i]))
         cat(paste("Mismatch of samples:", epdEnts$E[i],"\n"), 
-            file = "test.log", append = TRUE)
+            file = "stratplot.log", append = TRUE)
       }
       
       
     } else {
       print(paste("Missing counts:", epdEnts$E[i]))
       cat(paste("Missing counts:", epdEnts$E[i],"\n"), 
-          file = "test.log", append = TRUE)
+          file = "stratplot.log", append = TRUE)
     }
     
   }
   
 }
+cat(paste("Finished:", date(),"\n"), 
+    file = "stratplot.log", append = TRUE)
