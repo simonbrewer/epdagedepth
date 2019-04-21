@@ -14,13 +14,12 @@ for (i in 1:ncore) {
   
   ## Run clam
   if (nages >= 2) {
-    clam(coreList[i], depths.file=TRUE, coredir = "./agemodels/clam/Cores/")
+    clam(coreList[i], depths.file=TRUE, coredir = "./agemodels/clam/Cores/", postbomb = 1)
     
     if (nages >= 4) {
-      clam(coreList[i], depths.file=TRUE, type = 4, coredir = "./agemodels/clam/Cores/")
+      clam(coreList[i], depths.file=TRUE, type = 4, coredir = "./agemodels/clam/Cores/", postbomb = 1)
       
     }
   }
-  stop()
-  
+
 }
